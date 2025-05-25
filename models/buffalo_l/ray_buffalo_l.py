@@ -10,12 +10,12 @@ from ray.runtime_env import RuntimeEnv
 import logging
 import os
 
-ray_address = "ray://localhost:10001" # Ray集群地址
+# ray_address = "ray://localhost:10001" # Ray集群地址
 
 # 初始化Ray - 如果在本地运行，可以直接初始化
 # 如果已经有集群，则连接到集群
 conda_env = RuntimeEnv(
-    conda="local"
+    conda="py3.8_ray"
 )
 @ray.remote(num_cpus=1, num_gpus=1, runtime_env=conda_env)
 class BuffaloFaceDetector:
@@ -23,25 +23,10 @@ class BuffaloFaceDetector:
     
     def __init__(self):
         """初始化FaceAnalysis应用"""
-        self.app = FaceAnalysis(providers=['CUDAExecutionProvider'])
+        self.app = FaceAnalysis(providers=['CPUExecutionProvider'])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
-    def print_sysytem_info(self):
-        """打印系统信息"""
-        print(f"Python版本: {sys.version}")
-        print(f"Python版本详情: {platform.python_version()}")
-        print(f"Python实现: {platform.python_implementation()}")
-        # 打印当前的pip包
-        print(f"当前pip包: {os.popen('pip freeze').read()}")
-        # 打印当前conda环境
-        print(f"当前conda环境: {os.popen('conda env list').read()}")
-        return {
-            "python_version": sys.version,
-            "python_implementation": platform.python_implementation(),
-            "pip_packages": os.popen('pip freeze').read(),
-            "conda_env": os.popen('conda env list').read()
-        }
 
-    def detect_face(self,image):
+    def detect(self,image):
         """
         检测图片中的人脸
         
@@ -92,7 +77,7 @@ class BuffaloFaceDetector:
 
 # 连接到本地Ray集群
 # 注意：请确保先运行了main.py启动本地集群
-ray.init(ignore_reinit_error=True) # 连接到本地集群，无需指定地址
+ray.init(address="auto",ignore_reinit_error=True) # 连接到本地集群，无需指定地址
 try:
      actor = ray.get_actor("Buffalo", namespace="face_detection")
      ray.kill(actor)
@@ -105,7 +90,7 @@ deploy = BuffaloFaceDetector.options(
     lifetime="detached",
     max_restarts=-1,
     num_cpus=1,
-    num_gpus=1
+    num_gpus=0
 ).remote()
 print("Buffalo已部署")
 # status = ray.get(deploy.print_sysytem_info.remote())

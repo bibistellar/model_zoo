@@ -9,7 +9,7 @@ import sys
 def parse_args():
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="Buffalo-L人脸检测样例")
-    parser.add_argument('--image', type=str, default="./image1.png", help="输入图像路径")
+    parser.add_argument('--image', type=str, default="/root/Code/aiplat/model_zoo/facelib/image1.png", help="输入图像路径")
     parser.add_argument('--output', type=str, default="./detected_face.png", help="输出图像路径")
     parser.add_argument('--show', action="store_true", help="显示检测结果")
     return parser.parse_args()
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     args = parse_args()
     
     # 连接到本地Ray集群
-    ray.init(ignore_reinit_error=True)  # 连接到本地集群
+    ray.init(address="auto",ignore_reinit_error=True)  # 连接到本地集群
     
     # 获取人脸检测Actor
     face_detector = ray.get_actor("Buffalo", namespace="face_detection")
